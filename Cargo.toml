@@ -1,0 +1,32 @@
+[package]
+name = "erract"
+version = "0.1.0"
+edition = "2021"
+description = "Structured, context-aware error handling for Rust applications"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/erract/erract"
+keywords = ["error", "error-handling", "context", "retry"]
+categories = ["development-tools::testing"]
+
+[dependencies]
+exn = "0.2"
+
+[dev-dependencies]
+proptest = "1.4"
+criterion = "0.5"
+
+[features]
+default = []
+http = []
+db = []
+storage = []
+
+[[bench]]
+name = "benchmark"
+harness = false
+
+[lib]
+path = "src/lib.rs"
+
+[package.metadata.docs.rs]
+all-features = true
