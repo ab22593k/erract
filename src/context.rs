@@ -8,8 +8,21 @@ use crate::Error;
 /// to errors at the point of failure.
 pub trait AddContext<T> {
     /// Adds a key-value pair to the error context.
+    ///
+    /// Both key and value are converted to `Cow<'static, str>`.
+    /// Use static strings when possible for zero-copy performance.
     #[must_use]
-    fn with_context(self, key: impl Into<Cow<'static, str>>, value: impl ToString) -> T;
+    fn with_context(
+        self,
+        key: impl Into<Cow<'static, str>>,
+        value: impl Into<Cow<'static, str>>,
+    ) -> T;
+
+    /// Adds a key-value pair where value is converted via ToString.
+    ///
+    /// Use this when the value needs to be converted from a non-string type.
+    #[must_use]
+    fn with_context_value(self, key: impl Into<Cow<'static, str>>, value: impl ToString) -> T;
 }
 
 impl<T> AddContext<Result<T, Error>> for Result<T, Error> {
@@ -17,10 +30,23 @@ impl<T> AddContext<Result<T, Error>> for Result<T, Error> {
     fn with_context(
         mut self,
         key: impl Into<Cow<'static, str>>,
+        value: impl Into<Cow<'static, str>>,
+    ) -> Result<T, Error> {
+        if let Err(ref mut err) = self {
+            err.context.push((key.into(), value.into()));
+        }
+        self
+    }
+
+    #[inline]
+    fn with_context_value(
+        mut self,
+        key: impl Into<Cow<'static, str>>,
         value: impl ToString,
     ) -> Result<T, Error> {
         if let Err(ref mut err) = self {
-            err.context.push((key.into(), value.to_string()));
+            err.context
+                .push((key.into(), Cow::Owned(value.to_string())));
         }
         self
     }
@@ -28,8 +54,23 @@ impl<T> AddContext<Result<T, Error>> for Result<T, Error> {
 
 impl AddContext<Error> for Error {
     #[inline]
-    fn with_context(mut self, key: impl Into<Cow<'static, str>>, value: impl ToString) -> Error {
-        self.context.push((key.into(), value.to_string()));
+    fn with_context(
+        mut self,
+        key: impl Into<Cow<'static, str>>,
+        value: impl Into<Cow<'static, str>>,
+    ) -> Error {
+        self.context.push((key.into(), value.into()));
+        self
+    }
+
+    #[inline]
+    fn with_context_value(
+        mut self,
+        key: impl Into<Cow<'static, str>>,
+        value: impl ToString,
+    ) -> Error {
+        self.context
+            .push((key.into(), Cow::Owned(value.to_string())));
         self
     }
 }
@@ -41,7 +82,7 @@ pub trait AddContextIter {
     fn with_context_iter<K, V>(self, iter: impl IntoIterator<Item = (K, V)>) -> Self
     where
         K: Into<Cow<'static, str>>,
-        V: ToString;
+        V: Into<Cow<'static, str>>;
 }
 
 impl<T> AddContextIter for Result<T, Error> {
@@ -49,11 +90,11 @@ impl<T> AddContextIter for Result<T, Error> {
     fn with_context_iter<K, V>(mut self, iter: impl IntoIterator<Item = (K, V)>) -> Result<T, Error>
     where
         K: Into<Cow<'static, str>>,
-        V: ToString,
+        V: Into<Cow<'static, str>>,
     {
         if let Err(ref mut err) = self {
             for (key, value) in iter {
-                err.context.push((key.into(), value.to_string()));
+                err.context.push((key.into(), value.into()));
             }
         }
         self
@@ -65,10 +106,10 @@ impl AddContextIter for Error {
     fn with_context_iter<K, V>(mut self, iter: impl IntoIterator<Item = (K, V)>) -> Error
     where
         K: Into<Cow<'static, str>>,
-        V: ToString,
+        V: Into<Cow<'static, str>>,
     {
         for (key, value) in iter {
-            self.context.push((key.into(), value.to_string()));
+            self.context.push((key.into(), value.into()));
         }
         self
     }
@@ -84,7 +125,7 @@ mod tests {
             Err(Error::permanent(crate::ErrorKind::NotFound, "not found"));
 
         let result = result
-            .with_context("user_id", 123)
+            .with_context("user_id", "123")
             .with_context("operation", "lookup");
 
         if let Err(err) = result {
@@ -97,11 +138,30 @@ mod tests {
     }
 
     #[test]
+    fn test_with_context_value_on_err() {
+        let result: Result<(), Error> =
+            Err(Error::permanent(crate::ErrorKind::NotFound, "not found"));
+
+        let result = result
+            .with_context_value("user_id", 123)
+            .with_context_value("count", 42u64);
+
+        if let Err(err) = result {
+            assert_eq!(err.context().len(), 2);
+            assert_eq!(err.context()[0].0, "user_id");
+            assert_eq!(err.context()[0].1, "123");
+            assert_eq!(err.context()[1].1, "42");
+        } else {
+            panic!("expected error");
+        }
+    }
+
+    #[test]
     fn test_with_context_on_ok() {
         let result: Result<(), Error> = Ok(());
 
         let result = result
-            .with_context("user_id", 123)
+            .with_context("user_id", "123")
             .with_context("operation", "lookup");
 
         assert!(result.is_ok());

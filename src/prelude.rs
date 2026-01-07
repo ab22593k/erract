@@ -19,4 +19,4 @@ pub use crate::error::{Error, ErrorBuilder};
 pub use crate::extract::{count_errors, count_frames};
 pub use crate::kind::ErrorKind;
 pub use crate::status::ErrorStatus;
-pub use exn::{bail, ensure, ResultExt};
+pub use exn::{ResultExt, bail, ensure};

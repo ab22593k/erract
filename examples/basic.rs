@@ -1,16 +1,17 @@
 use erract::prelude::*;
-use erract::{has_permanent, has_retryable, Error, ErrorKind, ErrorStatus};
+use erract::{Error, ErrorKind, ErrorStatus, has_permanent, has_retryable};
 
 // Helper functions for creating common error types
-fn not_found_error(message: impl Into<String>) -> Error {
+// Now using String directly since Cow<'static, str> requires owned or static strings
+fn not_found_error(message: String) -> Error {
     Error::permanent(ErrorKind::NotFound, message)
 }
 
-fn temporary_error(message: impl Into<String>) -> Error {
+fn temporary_error(message: &'static str) -> Error {
     Error::temporary(ErrorKind::Timeout, message)
 }
 
-fn unexpected_error(message: impl Into<String>) -> Error {
+fn unexpected_error(message: &'static str) -> Error {
     Error::temporary(ErrorKind::Unexpected, message)
 }
 
@@ -25,12 +26,13 @@ fn simulate_database_lookup(user_id: u32) -> erract::Result<Option<String>> {
 }
 
 fn fetch_user_data(user: &str) -> erract::Result<String> {
-    Err(
-        unexpected_error(format!("failed to fetch data for user: {user}"))
-            .with_context("user", user)
-            .with_context("operation", "fetch_user_data")
-            .raise(),
+    Err(Error::temporary(
+        ErrorKind::Unexpected,
+        format!("failed to fetch data for user: {user}"),
     )
+    .with_context("user", user.to_string())
+    .with_context("operation", "fetch_user_data")
+    .raise())
 }
 
 fn process_user(user_id: u32) -> erract::Result<String> {
@@ -161,6 +163,30 @@ fn demonstrate_from_conversions() {
     }
 }
 
+fn demonstrate_static_constructors() {
+    println!("\n=== Demonstrating Static Constructors (Zero Allocation) ===");
+
+    // These constructors use static messages - no heap allocation for message
+    let not_found = Error::not_found();
+    let timeout = Error::timeout();
+    let validation = Error::validation_failed();
+    let permission = Error::permission_denied();
+    let unexpected = Error::unexpected();
+
+    println!("Static not_found: {not_found}");
+    println!("Static timeout: {timeout}");
+    println!("Static validation: {validation}");
+    println!("Static permission_denied: {permission}");
+    println!("Static unexpected: {unexpected}");
+
+    // Add context to static errors
+    let error_with_ctx = Error::not_found()
+        .with_context("resource", "user")
+        .with_context_value("id", 12345);
+
+    println!("\nWith context: {error_with_ctx}");
+}
+
 fn main() {
     println!("erract - Structured Error Handling Demo\n");
 
@@ -168,6 +194,7 @@ fn main() {
     demonstrate_retry_logic();
     demonstrate_builder();
     demonstrate_machine_readable();
+    demonstrate_static_constructors();
     demonstrate_from_conversions();
     demonstrate_error_tree();
 
