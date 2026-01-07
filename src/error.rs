@@ -8,8 +8,8 @@ pub use self::builder::ErrorBuilder;
 /// Core error type for the erract library.
 ///
 /// This struct represents a single error with:
-/// - An actionable [`ErrorKind`](crate::ErrorKind) describing what the caller can do
-/// - An explicit [`ErrorStatus`](crate::ErrorStatus) describing retry semantics
+/// - An actionable [`ErrorKind`] describing what the caller can do
+/// - An explicit [`ErrorStatus`] describing retry semantics
 /// - A human-readable message
 /// - Optional operation name for debugging
 /// - Key-value context for troubleshooting

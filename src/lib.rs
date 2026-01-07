@@ -102,7 +102,7 @@ pub use crate::status::ErrorStatus;
 pub use exn;
 
 // Type alias for convenience
-/// Result type using exn::Exn<Error> as the error type
+/// Result type using `exn::Exn<Error>` as the error type
 pub type Result<T> = std::result::Result<T, exn::Exn<Error>>;
 
 /// Equivalent to `Ok::<_, Exn<Error>>(value)`.
