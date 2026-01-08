@@ -11,6 +11,7 @@ categories = ["development-tools::testing"]
 [dependencies]
 exn = "0.2"
 smallvec = "1.13"
+serde = { version = "1.0", optional = true, features = ["derive"] }
 
 [dev-dependencies]
 proptest = "1.4"
@@ -22,6 +23,7 @@ default = []
 http = []
 db = []
 storage = []
+serde = ["dep:serde", "smallvec/serde"]
 
 [[bench]]
 name = "benchmark"

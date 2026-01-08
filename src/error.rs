@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use std::error::Error as ErrorTrait;
 use std::fmt::{self, Write};
+use std::sync::Arc;
 
 use smallvec::SmallVec;
 
@@ -42,14 +43,29 @@ pub type ContextVec = SmallVec<[(Cow<'static, str>, Cow<'static, str>); 1]>;
 /// assert!(!error.is_retryable());
 /// assert_eq!(error.kind(), &ErrorKind::NotFound);
 /// ```
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone)]
 pub struct Error {
     kind: ErrorKind,
     status: ErrorStatus,
     message: Cow<'static, str>,
     operation: Option<&'static str>,
     pub(crate) context: ContextVec,
+    #[cfg_attr(feature = "serde", serde(skip, default))]
+    source: Option<Arc<dyn std::error::Error + Send + Sync + 'static>>,
 }
+
+impl PartialEq for Error {
+    fn eq(&self, other: &Self) -> bool {
+        self.kind == other.kind
+            && self.status == other.status
+            && self.message == other.message
+            && self.operation == other.operation
+            && self.context == other.context
+    }
+}
+
+impl Eq for Error {}
 
 impl Error {
     // ========================================================================
@@ -99,6 +115,7 @@ impl Error {
             message: Cow::Borrowed(message),
             operation: None,
             context: SmallVec::new(),
+            source: None,
         }
     }
 
@@ -111,6 +128,7 @@ impl Error {
             message: Cow::Borrowed(message),
             operation: None,
             context: SmallVec::new(),
+            source: None,
         }
     }
 
@@ -123,6 +141,7 @@ impl Error {
             message: Cow::Borrowed(message),
             operation: None,
             context: SmallVec::new(),
+            source: None,
         }
     }
 
@@ -139,6 +158,7 @@ impl Error {
             message: message.into(),
             operation: None,
             context: SmallVec::new(),
+            source: None,
         }
     }
 
@@ -151,6 +171,7 @@ impl Error {
             message: message.into(),
             operation: None,
             context: SmallVec::new(),
+            source: None,
         }
     }
 
@@ -163,6 +184,7 @@ impl Error {
             message: message.into(),
             operation: None,
             context: SmallVec::new(),
+            source: None,
         }
     }
 
@@ -179,6 +201,7 @@ impl Error {
             message: message.into(),
             operation: None,
             context: SmallVec::new(),
+            source: None,
         }
     }
 
@@ -238,6 +261,12 @@ impl Error {
         self.status.is_permanent()
     }
 
+    /// Returns an iterator over context key-value pairs.
+    #[inline]
+    pub fn iter_context(&self) -> impl Iterator<Item = (&str, &str)> {
+        self.context.iter().map(|(k, v)| (k.as_ref(), v.as_ref()))
+    }
+
     // ========================================================================
     // Builder methods
     // ========================================================================
@@ -247,6 +276,17 @@ impl Error {
     #[must_use]
     pub fn with_operation(mut self, operation: &'static str) -> Self {
         self.operation = Some(operation);
+        self
+    }
+
+    /// Sets the source error.
+    #[inline]
+    #[must_use]
+    pub fn with_source<E>(mut self, source: E) -> Self
+    where
+        E: std::error::Error + Send + Sync + 'static,
+    {
+        self.source = Some(Arc::new(source));
         self
     }
 
@@ -322,7 +362,15 @@ impl fmt::Display for Error {
 
 impl std::error::Error for Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        None
+        self.source
+            .as_deref()
+            .map(|e| e as &(dyn std::error::Error + 'static))
+    }
+}
+
+impl Default for Error {
+    fn default() -> Self {
+        Error::unexpected()
     }
 }
 
@@ -358,7 +406,7 @@ impl Error {
         output.push_str("kind=");
         output.push_str(&self.kind.to_machine_string());
         output.push_str(";status=");
-        output.push_str(&self.status.to_machine_string());
+        output.push_str(self.status.to_machine_string());
         output.push_str(";message=");
         output.push_str(&self.message);
 
@@ -409,7 +457,7 @@ impl Error {
         json.push_str(r#"{"kind":""#);
         json.push_str(&self.kind.to_machine_string());
         json.push_str(r#"","status":""#);
-        json.push_str(&self.status.to_machine_string());
+        json.push_str(self.status.to_machine_string());
         json.push_str(r#"","message":""#);
         write_escaped(&mut json, &self.message);
         json.push('"');
@@ -448,7 +496,7 @@ impl Error {
         buf.push_str(r#"{"kind":""#);
         buf.push_str(&self.kind.to_machine_string());
         buf.push_str(r#"","status":""#);
-        buf.push_str(&self.status.to_machine_string());
+        buf.push_str(self.status.to_machine_string());
         buf.push_str(r#"","message":""#);
         write_escaped(buf, &self.message);
         buf.push('"');
@@ -506,6 +554,7 @@ fn write_escaped(buf: &mut String, s: &str) {
 mod builder {
     use std::borrow::Cow;
     use std::fmt;
+    use std::sync::Arc;
 
     use smallvec::SmallVec;
 
@@ -547,6 +596,7 @@ mod builder {
                     message: message.into(),
                     operation: None,
                     context: SmallVec::new(),
+                    source: None,
                 },
             }
         }
@@ -556,6 +606,17 @@ mod builder {
         #[must_use]
         pub fn with_operation(mut self, operation: &'static str) -> Self {
             self.error.operation = Some(operation);
+            self
+        }
+
+        /// Sets the source error.
+        #[inline]
+        #[must_use]
+        pub fn with_source<E>(mut self, source: E) -> Self
+        where
+            E: std::error::Error + Send + Sync + 'static,
+        {
+            self.error.source = Some(Arc::new(source));
             self
         }
 

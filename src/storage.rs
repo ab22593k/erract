@@ -3,7 +3,9 @@ use std::fmt;
 /// Storage-specific error kinds.
 ///
 /// These errors categorize storage-related failures by what the caller should do.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum StorageErrorKind {
     /// File or resource not found.
     /// Permanent - the resource doesn't exist.
@@ -173,27 +175,27 @@ impl StorageErrorKind {
 
     /// Returns a machine-readable string representation of this storage error kind.
     #[inline]
-    pub fn to_machine_string(&self) -> String {
+    pub fn to_machine_string(&self) -> &'static str {
         match self {
-            StorageErrorKind::NotFound => "not_found".to_string(),
-            StorageErrorKind::DirectoryNotFound => "directory_not_found".to_string(),
-            StorageErrorKind::PermissionDenied => "permission_denied".to_string(),
-            StorageErrorKind::AlreadyExists => "already_exists".to_string(),
-            StorageErrorKind::IsDirectory => "is_directory".to_string(),
-            StorageErrorKind::NotDirectory => "not_directory".to_string(),
-            StorageErrorKind::DiskFull => "disk_full".to_string(),
-            StorageErrorKind::IoError => "io_error".to_string(),
-            StorageErrorKind::FileNameTooLong => "file_name_too_long".to_string(),
-            StorageErrorKind::PathTooLong => "path_too_long".to_string(),
-            StorageErrorKind::TooManyOpenFiles => "too_many_open_files".to_string(),
-            StorageErrorKind::ReadOnly => "read_only".to_string(),
-            StorageErrorKind::StorageFull => "storage_full".to_string(),
-            StorageErrorKind::NetworkError => "network_error".to_string(),
-            StorageErrorKind::NetworkTimeout => "network_timeout".to_string(),
-            StorageErrorKind::InvalidFilename => "invalid_filename".to_string(),
-            StorageErrorKind::InvalidPath => "invalid_path".to_string(),
-            StorageErrorKind::SymlinkLoop => "symlink_loop".to_string(),
-            StorageErrorKind::TooManySymlinks => "too_many_symlinks".to_string(),
+            StorageErrorKind::NotFound => "not_found",
+            StorageErrorKind::DirectoryNotFound => "directory_not_found",
+            StorageErrorKind::PermissionDenied => "permission_denied",
+            StorageErrorKind::AlreadyExists => "already_exists",
+            StorageErrorKind::IsDirectory => "is_directory",
+            StorageErrorKind::NotDirectory => "not_directory",
+            StorageErrorKind::DiskFull => "disk_full",
+            StorageErrorKind::IoError => "io_error",
+            StorageErrorKind::FileNameTooLong => "file_name_too_long",
+            StorageErrorKind::PathTooLong => "path_too_long",
+            StorageErrorKind::TooManyOpenFiles => "too_many_open_files",
+            StorageErrorKind::ReadOnly => "read_only",
+            StorageErrorKind::StorageFull => "storage_full",
+            StorageErrorKind::NetworkError => "network_error",
+            StorageErrorKind::NetworkTimeout => "network_timeout",
+            StorageErrorKind::InvalidFilename => "invalid_filename",
+            StorageErrorKind::InvalidPath => "invalid_path",
+            StorageErrorKind::SymlinkLoop => "symlink_loop",
+            StorageErrorKind::TooManySymlinks => "too_many_symlinks",
         }
     }
 }

@@ -4,7 +4,9 @@ use std::fmt;
 ///
 /// Errors are categorized by whether they can be safely retried.
 /// This eliminates guesswork when implementing retry logic.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum ErrorStatus {
     /// The error is permanent and retrying won't help.
     /// Examples: NotFound, PermissionDenied, Validation errors
@@ -67,11 +69,11 @@ impl ErrorStatus {
     /// assert_eq!(ErrorStatus::Persistent.to_machine_string(), "persistent");
     /// ```
     #[inline]
-    pub fn to_machine_string(&self) -> String {
+    pub fn to_machine_string(&self) -> &'static str {
         match self {
-            ErrorStatus::Permanent => "permanent".to_string(),
-            ErrorStatus::Temporary => "temporary".to_string(),
-            ErrorStatus::Persistent => "persistent".to_string(),
+            ErrorStatus::Permanent => "permanent",
+            ErrorStatus::Temporary => "temporary",
+            ErrorStatus::Persistent => "persistent",
         }
     }
 }

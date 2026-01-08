@@ -1,9 +1,12 @@
+use std::borrow::Cow;
 use std::fmt;
 
 /// HTTP-specific error kinds.
 ///
 /// These errors categorize HTTP-related failures by what the caller should do.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum HttpErrorKind {
     /// Client error (4xx status codes).
     /// Don't retry - the request is malformed or unauthorized.
@@ -136,19 +139,19 @@ impl HttpErrorKind {
 
     /// Returns a machine-readable string representation of this HTTP error kind.
     #[inline]
-    pub fn to_machine_string(&self) -> String {
+    pub fn to_machine_string(&self) -> Cow<'static, str> {
         match self {
-            HttpErrorKind::ClientError(code) => format!("client_error_{code}"),
-            HttpErrorKind::ServerError(code) => format!("server_error_{code}"),
-            HttpErrorKind::RateLimited => "rate_limited".to_string(),
-            HttpErrorKind::NetworkError => "network_error".to_string(),
-            HttpErrorKind::TlsError => "tls_error".to_string(),
-            HttpErrorKind::InvalidUrl => "invalid_url".to_string(),
-            HttpErrorKind::RedirectLoop => "redirect_loop".to_string(),
-            HttpErrorKind::TooManyRedirects => "too_many_redirects".to_string(),
-            HttpErrorKind::RequestTimeout => "request_timeout".to_string(),
-            HttpErrorKind::EncodingError => "encoding_error".to_string(),
-            HttpErrorKind::DecodingError => "decoding_error".to_string(),
+            HttpErrorKind::ClientError(code) => Cow::Owned(format!("client_error_{code}")),
+            HttpErrorKind::ServerError(code) => Cow::Owned(format!("server_error_{code}")),
+            HttpErrorKind::RateLimited => Cow::Borrowed("rate_limited"),
+            HttpErrorKind::NetworkError => Cow::Borrowed("network_error"),
+            HttpErrorKind::TlsError => Cow::Borrowed("tls_error"),
+            HttpErrorKind::InvalidUrl => Cow::Borrowed("invalid_url"),
+            HttpErrorKind::RedirectLoop => Cow::Borrowed("redirect_loop"),
+            HttpErrorKind::TooManyRedirects => Cow::Borrowed("too_many_redirects"),
+            HttpErrorKind::RequestTimeout => Cow::Borrowed("request_timeout"),
+            HttpErrorKind::EncodingError => Cow::Borrowed("encoding_error"),
+            HttpErrorKind::DecodingError => Cow::Borrowed("decoding_error"),
         }
     }
 }

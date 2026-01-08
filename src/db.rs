@@ -3,7 +3,9 @@ use std::fmt;
 /// Database-specific error kinds.
 ///
 /// These errors categorize database-related failures by what the caller should do.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum DatabaseErrorKind {
     /// Failed to establish database connection.
     /// May be temporary - safe to retry.
@@ -157,25 +159,25 @@ impl DatabaseErrorKind {
 
     /// Returns a machine-readable string representation of this database error kind.
     #[inline]
-    pub fn to_machine_string(&self) -> String {
+    pub fn to_machine_string(&self) -> &'static str {
         match self {
-            DatabaseErrorKind::ConnectionFailed => "connection_failed".to_string(),
-            DatabaseErrorKind::ConnectionLost => "connection_lost".to_string(),
-            DatabaseErrorKind::QuerySyntax => "query_syntax".to_string(),
-            DatabaseErrorKind::QueryExecution => "query_execution".to_string(),
-            DatabaseErrorKind::ConstraintViolation => "constraint_violation".to_string(),
-            DatabaseErrorKind::Deadlock => "deadlock".to_string(),
-            DatabaseErrorKind::SerializationFailure => "serialization_failure".to_string(),
-            DatabaseErrorKind::TransactionTimeout => "transaction_timeout".to_string(),
-            DatabaseErrorKind::NestedTransaction => "nested_transaction".to_string(),
-            DatabaseErrorKind::NoRows => "no_rows".to_string(),
-            DatabaseErrorKind::TooManyRows => "too_many_rows".to_string(),
-            DatabaseErrorKind::TypeMismatch => "type_mismatch".to_string(),
-            DatabaseErrorKind::SchemaMismatch => "schema_mismatch".to_string(),
-            DatabaseErrorKind::DatabaseLocked => "database_locked".to_string(),
-            DatabaseErrorKind::DiskFull => "disk_full".to_string(),
-            DatabaseErrorKind::PermissionDenied => "permission_denied".to_string(),
-            DatabaseErrorKind::ReadOnly => "read_only".to_string(),
+            DatabaseErrorKind::ConnectionFailed => "connection_failed",
+            DatabaseErrorKind::ConnectionLost => "connection_lost",
+            DatabaseErrorKind::QuerySyntax => "query_syntax",
+            DatabaseErrorKind::QueryExecution => "query_execution",
+            DatabaseErrorKind::ConstraintViolation => "constraint_violation",
+            DatabaseErrorKind::Deadlock => "deadlock",
+            DatabaseErrorKind::SerializationFailure => "serialization_failure",
+            DatabaseErrorKind::TransactionTimeout => "transaction_timeout",
+            DatabaseErrorKind::NestedTransaction => "nested_transaction",
+            DatabaseErrorKind::NoRows => "no_rows",
+            DatabaseErrorKind::TooManyRows => "too_many_rows",
+            DatabaseErrorKind::TypeMismatch => "type_mismatch",
+            DatabaseErrorKind::SchemaMismatch => "schema_mismatch",
+            DatabaseErrorKind::DatabaseLocked => "database_locked",
+            DatabaseErrorKind::DiskFull => "disk_full",
+            DatabaseErrorKind::PermissionDenied => "permission_denied",
+            DatabaseErrorKind::ReadOnly => "read_only",
         }
     }
 }

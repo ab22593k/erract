@@ -19,7 +19,9 @@ use super::storage::StorageErrorKind;
 /// - Return a specific error to the user
 ///
 /// This is different from `thiserror` which categorizes by where the error came from.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum ErrorKind {
     /// Resource was not found.
     /// Don't retry - the resource doesn't exist.
@@ -114,11 +116,11 @@ impl ErrorKind {
             ErrorKind::Validation => Cow::Borrowed("validation_error"),
             ErrorKind::Unexpected => Cow::Borrowed("unexpected_error"),
             #[cfg(feature = "http")]
-            ErrorKind::Http(k) => Cow::Owned(format!("http_{k}")),
+            ErrorKind::Http(k) => Cow::Owned(format!("http_{}", k.to_machine_string())),
             #[cfg(feature = "db")]
-            ErrorKind::Database(k) => Cow::Owned(format!("database_{k}")),
+            ErrorKind::Database(k) => Cow::Owned(format!("database_{}", k.to_machine_string())),
             #[cfg(feature = "storage")]
-            ErrorKind::Storage(k) => Cow::Owned(format!("storage_{k}")),
+            ErrorKind::Storage(k) => Cow::Owned(format!("storage_{}", k.to_machine_string())),
         }
     }
 }
