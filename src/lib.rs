@@ -86,6 +86,8 @@ pub mod http;
 #[cfg(feature = "db")]
 pub mod db;
 
+/// Arena-based memory management for error context.
+pub mod arena;
 /// Storage-specific error kinds.
 #[cfg(feature = "storage")]
 pub mod storage;

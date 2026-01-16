@@ -22,20 +22,32 @@ Usage notes:
 <available_skills>
 
 <skill>
-<name>algorithmic-art</name>
-<description>Creating algorithmic art using p5.js with seeded randomness and interactive parameter exploration. Use this when users request creating art using code, generative art, algorithmic art, flow fields, or particle systems. Create original algorithmic art rather than copying existing artists' work to avoid copyright violations.</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>brand-guidelines</name>
-<description>Applies Anthropic's official brand colors and typography to any sort of artifact that may benefit from having Anthropic's look-and-feel. Use it when brand colors or style guidelines, visual formatting, or company design standards apply.</description>
-<location>project</location>
-</skill>
-
-<skill>
 <name>doc-coauthoring</name>
 <description>Guide users through a structured workflow for co-authoring documentation. Use when user wants to write documentation, proposals, technical specs, decision docs, or similar structured content. This workflow helps users efficiently transfer context, refine content through iteration, and verify the doc works for readers. Trigger when user mentions writing docs, creating proposals, drafting specs, or similar documentation tasks.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>systematic-debugging</name>
+<description>Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>test-driven-development</name>
+<description>Use when implementing any feature or bugfix, before writing implementation code</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>verification-before-completion</name>
+<description>Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>writing-plans</name>
+<description>Use when you have a spec or requirements for a multi-step task, before touching code</description>
 <location>project</location>
 </skill>
 

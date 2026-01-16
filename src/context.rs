@@ -28,50 +28,36 @@ pub trait AddContext<T> {
 impl<T> AddContext<Result<T, Error>> for Result<T, Error> {
     #[inline]
     fn with_context(
-        mut self,
+        self,
         key: impl Into<Cow<'static, str>>,
         value: impl Into<Cow<'static, str>>,
     ) -> Result<T, Error> {
-        if let Err(ref mut err) = self {
-            err.context.push((key.into(), value.into()));
-        }
-        self
+        self.map_err(|err| err.with_context(key, value))
     }
 
     #[inline]
     fn with_context_value(
-        mut self,
+        self,
         key: impl Into<Cow<'static, str>>,
         value: impl ToString,
     ) -> Result<T, Error> {
-        if let Err(ref mut err) = self {
-            err.context
-                .push((key.into(), Cow::Owned(value.to_string())));
-        }
-        self
+        self.map_err(|err| err.with_context_value(key, value))
     }
 }
 
 impl AddContext<Error> for Error {
     #[inline]
     fn with_context(
-        mut self,
+        self,
         key: impl Into<Cow<'static, str>>,
         value: impl Into<Cow<'static, str>>,
     ) -> Error {
-        self.context.push((key.into(), value.into()));
-        self
+        self.with_context(key, value)
     }
 
     #[inline]
-    fn with_context_value(
-        mut self,
-        key: impl Into<Cow<'static, str>>,
-        value: impl ToString,
-    ) -> Error {
-        self.context
-            .push((key.into(), Cow::Owned(value.to_string())));
-        self
+    fn with_context_value(self, key: impl Into<Cow<'static, str>>, value: impl ToString) -> Error {
+        self.with_context_value(key, value)
     }
 }
 
@@ -87,17 +73,12 @@ pub trait AddContextIter {
 
 impl<T> AddContextIter for Result<T, Error> {
     #[inline]
-    fn with_context_iter<K, V>(mut self, iter: impl IntoIterator<Item = (K, V)>) -> Result<T, Error>
+    fn with_context_iter<K, V>(self, iter: impl IntoIterator<Item = (K, V)>) -> Result<T, Error>
     where
         K: Into<Cow<'static, str>>,
         V: Into<Cow<'static, str>>,
     {
-        if let Err(ref mut err) = self {
-            for (key, value) in iter {
-                err.context.push((key.into(), value.into()));
-            }
-        }
-        self
+        self.map_err(|err| err.with_context_iter(iter))
     }
 }
 
@@ -109,7 +90,7 @@ impl AddContextIter for Error {
         V: Into<Cow<'static, str>>,
     {
         for (key, value) in iter {
-            self.context.push((key.into(), value.into()));
+            self = self.with_context(key, value);
         }
         self
     }

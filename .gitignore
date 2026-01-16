@@ -1,4 +1,5 @@
 /target
 
-# AI
+# AI Agents
 .claude/
+.serena/
